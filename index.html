@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>המשימה הסודית - יום הולדת 11 לנתאי</title>
+  
+  <!-- Tailwind CSS & Canvas Confetti -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Rubik:wght@400;600;700;900&family=Suez+One&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --gold-bright: #f3ce7e;
+      --gold-main: #d7a63b;
+      --navy-dark: #050d1a;
+      --navy-card: rgba(10, 22, 40, 0.88);
+      --ember-red: #e74c3c;
+    }
+
+    body {
+      font-family: 'Rubik', 'Assistant', sans-serif;
+      background-color: var(--navy-dark);
+      background-image: 
+        radial-gradient(circle at 50% 20%, rgba(215, 166, 59, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at 15% 80%, rgba(231, 76, 60, 0.12) 0%, transparent 50%),
+        linear-gradient(180deg, #030810 0%, #0a192f 100%);
+      color: #f1f5f9;
+      min-height: 100vh;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    .font-suez { font-family: 'Suez One', serif; }
+
+    .glass-box {
+      background: var(--navy-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(215, 166, 59, 0.35);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #fff3d1 0%, #f3ce7e 50%, #c99a38 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .ember-gradient-text {
+      background: linear-gradient(135deg, #ff8a80 0%, #e74c3c 50%, #b71c1c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #f3ce7e 0%, #d7a63b 100%);
+      color: #1a0f00;
+      font-weight: 800;
+      box-shadow: 0 6px 20px rgba(215, 166, 59, 0.4);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-gold:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 10px 25px rgba(215, 166, 59, 0.6);
+    }
+    .btn-gold:active { transform: translateY(0) scale(0.98); }
+
+    .btn-ember {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: #ffffff;
+      font-weight: 800;
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.45);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-ember:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 10px 25px rgba(231, 76, 60, 0.65);
+    }
+
+    /* Radar Grid */
+    .radar-grid {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(215, 166, 59, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(215, 166, 59, 0.04) 1px, transparent 1px);
+    }
+
+    @keyframes compassRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .spin-slow { animation: compassRotate 25s linear infinite; }
+
+    @keyframes pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 12px rgba(243, 206, 126, 0.3)); transform: scale(1); }
+      50% { filter: drop-shadow(0 0 30px rgba(243, 206, 126, 0.8)); transform: scale(1.05); }
+    }
+    .pulse-glow { animation: pulseGlow 3s infinite ease-in-out; }
+
+    @keyframes countdownPop {
+      0% { opacity: 0; transform: scale(0.3); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .cd-pop { animation: countdownPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+    .slide-view {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      transform: translateY(12px);
+    }
+    .slide-view.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Secret Agent HUD Scanline */
+    .scan-line {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, rgba(243, 206, 126, 0.8), transparent);
+      animation: scan 4s linear infinite;
+    }
+    @keyframes scan {
+      0% { top: 0%; opacity: 0.8; }
+      50% { opacity: 0.3; }
+      100% { top: 100%; opacity: 0.8; }
+    }
+
+    @keyframes autoProgress {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+    .animate-progress {
+      animation: autoProgress linear forwards;
+    }
+  </style>
+</head>
+
+<body class="flex flex-col items-center justify-between p-3 md:p-6 min-h-screen relative radar-grid selection:bg-amber-500 selection:text-slate-950">
+
+  <!-- HEADER BAR -->
+  <header class="w-full max-w-4xl flex items-center justify-between py-3 px-4 glass-box rounded-2xl mb-4 z-20">
+    <div class="flex items-center space-x-3 space-x-reverse">
+      <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-2xl shadow-inner">
+        🕵️‍♂️
+      </div>
+      <div>
+        <h1 class="font-suez text-base md:text-xl gold-gradient-text leading-tight">המשימה הסודית</h1>
+        <p class="text-[11px] md:text-xs text-amber-200/70 font-medium">יום הולדת 11 לנתאי</p>
+      </div>
+    </div>
+
+    <!-- Mode & Sound Controls -->
+    <div class="flex items-center gap-2">
+      <button onclick="toggleAudio()" id="soundToggle" class="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-amber-500/40 text-amber-300 text-xs font-bold hover:bg-amber-500/20 transition flex items-center gap-1.5">
+        <span id="soundIcon">🔊</span>
+        <span id="soundText" class="hidden md:inline">מוזיקה: פעילה</span>
+      </button>
+
+      <button onclick="toggleMode()" id="modeSwitchBtn" class="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-amber-500/40 text-amber-300 text-xs font-bold hover:bg-amber-500/20 transition flex items-center gap-1.5">
+        <span id="modeIcon">👑</span>
+        <span id="modeText" class="hidden sm:inline">מעבר למסך סיום (אוצר)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN STAGE -->
+  <main class="w-full max-w-4xl flex-1 flex flex-col justify-center relative my-auto z-10">
+    
+    <div class="glass-box rounded-3xl p-5 md:p-10 relative overflow-hidden min-h-[480px] flex flex-col justify-center items-center text-center">
+      
+      <div class="scan-line pointer-events-none"></div>
+
+      <!-- Auto Play Indicator Bar -->
+      <div id="autoPlayControl" class="hidden absolute top-4 left-4 right-4 z-20 flex flex-col items-center gap-1">
+        <div class="flex items-center justify-between w-full px-4 py-1.5 bg-slate-900/90 border border-amber-500/40 rounded-full text-xs text-amber-300 font-bold backdrop-blur">
+          <span class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            הזנקה אוטומטית ברצף פעילה
+          </span>
+          <button onclick="stopAutoPlay()" class="bg-red-600/80 hover:bg-red-600 text-white px-2.5 py-0.5 rounded-full text-[11px] transition">
+            עצור
+          </button>
+        </div>
+        <div id="autoProgressBarContainer" class="w-full bg-slate-800/80 rounded-full h-1.5 overflow-hidden border border-amber-500/30 mt-1">
+          <div id="autoProgressBar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-1.5 rounded-full w-0"></div>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 0: COVER / TITLE ================= -->
+      <div class="slide-view active flex-col items-center gap-6" id="slide-0">
+        <div class="relative flex items-center justify-center py-2">
+          <svg class="w-28 h-28 md:w-36 md:h-36 spin-slow text-amber-400/80" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="1"/>
+            <polygon points="50,12 58,50 50,88 42,50" fill="#e74c3c"/>
+            <polygon points="12,50 50,42 88,50 50,58" fill="#f3ce7e"/>
+            <circle cx="50" cy="50" r="5" fill="#ffffff"/>
+          </svg>
+          <div class="absolute text-4xl md:text-5xl pulse-glow">🧭</div>
+        </div>
+
+        <div class="space-y-3 max-w-xl">
+          <span class="inline-block px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs md:text-sm font-bold tracking-wide">
+            🚨 תדריך סודי לפני יציאה למשימה
+          </span>
+          <h2 class="font-suez text-3xl md:text-5xl gold-gradient-text leading-tight">
+            המשימה הסודית של נתאי!
+          </h2>
+          <p class="text-slate-300 text-sm md:text-base leading-relaxed">
+            סוכנים יקרים! תיבת האוצר של נתאי נעולה בקוד סודי. האם תצליחו לעבור את כל האתגרים בשכונה, לאסוף את החלקים ולפתוח את האוצר?
+          </p>
+        </div>
+
+        <!-- Start Buttons -->
+        <div class="flex flex-col sm:flex-row justify-center gap-4 max-w-md w-full mt-2">
+          <button onclick="startMissionManual()" class="btn-gold py-3.5 px-6 rounded-2xl text-base flex items-center justify-center gap-2">
+            <span>פתיחת משימה (ידני)</span>
+            <span>⚡</span>
+          </button>
+          <button onclick="startAutoPlay()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black py-3.5 px-6 rounded-2xl text-base flex items-center justify-center gap-2 border-2 border-emerald-300 shadow-lg transform hover:-translate-y-0.5 transition animate-pulse">
+            <span>▶ הזנקה אוטומטית ברצף</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= BRIEFING SLIDES (1-4) ================= -->
+      
+      <!-- Slide 1 -->
+      <div class="slide-view flex-col items-center gap-5 max-w-2xl" id="slide-1">
+        <div class="text-4xl md:text-5xl">🔐</div>
+        <div class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold">תדריך - חלק 1 מתוך 4</div>
+        <h3 class="font-suez text-2xl md:text-4xl gold-gradient-text">תיבת האוצר נעולה!</h3>
+        <p class="text-slate-200 text-base md:text-xl leading-relaxed font-medium bg-slate-900/70 p-5 rounded-2xl border border-amber-500/20 shadow-inner">
+          "סוכנים יקרים, תיבת האוצר הסודית של נתאי נעולה בקוד מיוחד! אף אחד לא יודע מה מכילה התיבה... עד שלא תפצחו את המנעול!"
+        </p>
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="slide-view flex-col items-center gap-5 max-w-2xl" id="slide-2">
+        <div class="text-4xl md:text-5xl">🏃‍♂️🧭</div>
+        <div class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold">תדריך - חלק 2 מתוך 4</div>
+        <h3 class="font-suez text-2xl md:text-4xl gold-gradient-text">יוצאים למסלול בשכונה</h3>
+        <p class="text-slate-200 text-base md:text-xl leading-relaxed font-medium bg-slate-900/70 p-5 rounded-2xl border border-amber-500/20 shadow-inner">
+          "כדי לפתוח את התיבה תצטרכו לעבור בין התחנות בשכונה, למצוא את כרטיסי המשימה הסודיים, לפתור את הרמזים ולבצע את האתגרים בשטח!"
+        </p>
+      </div>
+
+      <!-- Slide 3 -->
+      <div class="slide-view flex-col items-center gap-5 max-w-2xl" id="slide-3">
+        <div class="text-4xl md:text-5xl">📸👥</div>
+        <div class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold">תדריך - חלק 3 מתוך 4</div>
+        <h3 class="font-suez text-2xl md:text-4xl gold-gradient-text">חוקי המשחק והסלפי</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-right w-full">
+          <div class="bg-slate-900/70 p-4 rounded-xl border border-amber-500/20">
+            <span class="text-amber-400 font-bold block mb-1">📸 מצלמים בכל תחנה</span>
+            <span class="text-xs text-slate-300">סלפי קבוצתי מצחיק או הוכחת ביצוע משימה ושולחים לקבוצה!</span>
+          </div>
+          <div class="bg-slate-900/70 p-4 rounded-xl border border-amber-500/20">
+            <span class="text-amber-400 font-bold block mb-1">🤝 שומרים על הסביבה</span>
+            <span class="text-xs text-slate-300">משתפים פעולה, שומרים על השכונה ולא נכנסים לחצרות פרטיות.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4 -->
+      <div class="slide-view flex-col items-center gap-5 max-w-2xl" id="slide-4">
+        <div class="text-4xl md:text-5xl">🔢🗝️</div>
+        <div class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold">תדריך - חלק 4 מתוך 4</div>
+        <h3 class="font-suez text-2xl md:text-4xl gold-gradient-text">שומרים על המספרים!</h3>
+        <p class="text-slate-200 text-base md:text-xl leading-relaxed font-medium bg-slate-900/70 p-5 rounded-2xl border border-amber-500/20 shadow-inner">
+          "במהלך המסלול תמצאו מספרים סודיים. <span class="text-amber-300 font-bold">אל תאבדו אותם!</span> בסוף המסלול תצטרכו להציג את מה שאספתם כדי להציג את הקוד ולפתוח את תיבת האוצר!"
+        </p>
+      </div>
+
+      <!-- ================= SCENE 5: LAUNCH COUNTDOWN ================= -->
+      <div class="slide-view flex-col items-center gap-6" id="slide-launch">
+        <div class="text-amber-400 text-xs font-bold tracking-widest bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 rounded-full uppercase">
+          🚨 ספירה לאחור להזנקה
+        </div>
+
+        <h2 class="font-suez text-2xl md:text-4xl gold-gradient-text">סוכנים... אתם מוכנים?</h2>
+
+        <div id="countdownBox" class="text-7xl md:text-9xl font-suez gold-gradient-text h-28 flex items-center justify-center">
+          <span id="cdNum" class="cd-pop">3</span>
+        </div>
+
+        <div id="launchFinalState" class="hidden flex-col items-center gap-4">
+          <div class="text-3xl md:text-5xl font-suez ember-gradient-text animate-bounce">
+            🚀 3... 2... 1... יוצאים לדרך!
+          </div>
+          <p class="text-amber-200 text-sm md:text-base font-bold">
+            בהצלחה, סוכנים! נתראה בנקודת הסיום!
+          </p>
+          <button onclick="goToSlide(0)" class="mt-2 text-xs text-slate-400 underline hover:text-amber-300">
+            ↺ הפעל תדריך מחדש
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= MODE 2: FINAL TREASURE UNLOCKING SCREEN ================= -->
+      <div class="slide-view flex-col items-center gap-6 max-w-md w-full" id="slide-final-mode">
+        <div class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+          🏆 מסך סיום המשחק - פתיחת תיבת האוצר
+        </div>
+
+        <div class="text-center space-y-1">
+          <h2 class="font-suez text-3xl md:text-4xl gold-gradient-text">פתיחת תיבת האוצר!</h2>
+          <p class="text-xs text-slate-300">הזינו את הקוד הסודי שנאסף בתחנות</p>
+        </div>
+
+        <div class="text-7xl md:text-8xl my-1 pulse-glow" id="chestGraphic">🧰</div>
+
+        <!-- Code Inputs -->
+        <div class="w-full bg-slate-900/90 border border-amber-500/30 p-5 rounded-2xl space-y-4">
+          <div class="flex justify-center gap-2" dir="ltr">
+            <input type="text" maxlength="1" class="code-in w-12 h-14 text-center text-2xl font-bold bg-slate-950 border-2 border-amber-500/50 rounded-xl text-amber-300 focus:border-amber-400 focus:outline-none" />
+            <input type="text" maxlength="1" class="code-in w-12 h-14 text-center text-2xl font-bold bg-slate-950 border-2 border-amber-500/50 rounded-xl text-amber-300 focus:border-amber-400 focus:outline-none" />
+            <input type="text" maxlength="1" class="code-in w-12 h-14 text-center text-2xl font-bold bg-slate-950 border-2 border-amber-500/50 rounded-xl text-amber-300 focus:border-amber-400 focus:outline-none" />
+            <input type="text" maxlength="1" class="code-in w-12 h-14 text-center text-2xl font-bold bg-slate-950 border-2 border-amber-500/50 rounded-xl text-amber-300 focus:border-amber-400 focus:outline-none" />
+          </div>
+
+          <button onclick="unlockTreasure()" class="btn-ember w-full py-3.5 rounded-xl text-base font-bold">
+            🔓 פתח את תיבת האוצר!
+          </button>
+          
+          <p id="unlockStatus" class="text-xs font-bold min-h-[1.25rem]"></p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- FOOTER NAVIGATION BAR -->
+  <footer class="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-3 py-3 px-4 glass-box rounded-2xl mt-4 z-20">
+    
+    <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+      <button onclick="prevSlide()" id="prevBtn" class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition text-xs md:text-sm font-semibold flex items-center gap-1">
+        <span>►</span> <span>הקודם</span>
+      </button>
+
+      <!-- Dots Indicator -->
+      <div class="flex items-center gap-1.5" id="dotsBar">
+        <!-- Rendered via JS -->
+      </div>
+
+      <button onclick="nextSlide()" id="nextBtn" class="px-4 py-2 rounded-xl btn-gold text-xs md:text-sm flex items-center gap-1">
+        <span>הבא</span> <span>◄</span>
+      </button>
+    </div>
+
+    <div class="text-xs text-amber-200/70 font-semibold" id="slideStatus">
+      תדריך פתיחה
+    </div>
+  </footer>
+
+  <script>
+    /* Application State */
+    let activeSlide = 0;
+    const totalBriefingSlides = 5; // 0: Cover, 1-4: Briefing, 5: Launch
+    let isFinalMode = false;
+    let isMuted = false;
+    let audioCtx = null;
+    let isAudioInitialized = false;
+    let bgmTimer = null;
+    let stepCount = 0;
+    let autoPlayTimer = null;
+    let isAutoPlaying = false;
+    let countdownTimer = null;
+
+    const slideDurations = [0, 5000, 5000, 6000, 5000]; // Durations per slide in ms for auto-play
+
+    /* Web Audio Synthesizer Engine */
+    function initAudio() {
+      if (isAudioInitialized) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        isAudioInitialized = true;
+        startCinematicBGM();
+      } catch (e) {
+        console.log("Audio not supported");
+      }
+    }
+
+    function initAudioOnFirstClick() {
+      initAudio();
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playNote(freq, type, duration, delay = 0, gainVal = 0.1) {
+      if (!audioCtx || isMuted || audioCtx.state !== 'running') return;
+      setTimeout(() => {
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          
+          gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch(e){}
+      }, delay);
+    }
+
+    function playPercussion(type = 'kick', delay = 0) {
+      if (!audioCtx || isMuted || audioCtx.state !== 'running') return;
+      setTimeout(() => {
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          
+          if (type === 'kick') {
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+          } else if (type === 'hihat') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(8000, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+          }
+          
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.15);
+        } catch(e){}
+      }, delay);
+    }
+
+    function startCinematicBGM() {
+      if (bgmTimer) clearInterval(bgmTimer);
+      const bassNotes = [164.81, 164.81, 174.61, 164.81, 155.56, 164.81, 196.00, 185.00];
+      
+      bgmTimer = setInterval(() => {
+        if (isMuted || !audioCtx || audioCtx.state !== 'running') return;
+        
+        const currentBass = bassNotes[stepCount % bassNotes.length];
+        
+        playNote(currentBass / 2, 'sawtooth', 0.2, 0, 0.08);
+        playNote(currentBass, 'triangle', 0.15, 120, 0.05);
+
+        playPercussion('kick', 0);
+        playPercussion('hihat', 120);
+        playPercussion('hihat', 240);
+        playPercussion('hihat', 360);
+
+        if (stepCount % 8 === 0) {
+          playNote(329.63, 'sine', 0.5, 0, 0.04);
+          playNote(349.23, 'sine', 0.5, 200, 0.04);
+        }
+
+        stepCount++;
+      }, 250);
+    }
+
+    function toggleAudio() {
+      initAudioOnFirstClick();
+      isMuted = !isMuted;
+      document.getElementById('soundIcon').innerText = isMuted ? '🔇' : '🔊';
+      document.getElementById('soundText').innerText = isMuted ? 'מוזיקה: מושתקת' : 'מוזיקה: פעילה';
+    }
+
+    function playRadarBeep() { playNote(880, 'sine', 0.1, 0, 0.06); }
+    function playCdBeep() { playNote(523.25, 'triangle', 0.2, 0, 0.12); }
+    function playLaunchFanfare() {
+      if (isMuted) return;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, i) => {
+        playNote(freq, 'triangle', 0.4, i * 140, 0.15);
+      });
+    }
+
+    /* Navigation & Slide Management */
+    function renderDots() {
+      const bar = document.getElementById('dotsBar');
+      bar.innerHTML = '';
+      for (let i = 0; i <= totalBriefingSlides; i++) {
+        const dot = document.createElement('button');
+        dot.onclick = () => { stopAutoPlay(); goToSlide(i); };
+        if (i === activeSlide && !isFinalMode) {
+          dot.className = 'w-6 h-2.5 rounded-full bg-amber-400 transition-all';
+        } else {
+          dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-slate-500 transition-all';
+        }
+        bar.appendChild(dot);
+      }
+    }
+
+    function showView(viewId) {
+      document.querySelectorAll('.slide-view').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById(viewId);
+      if (target) target.classList.add('active');
+    }
+
+    function goToSlide(idx) {
+      if (isFinalMode) isFinalMode = false;
+      activeSlide = idx;
+      
+      if (activeSlide === 5) {
+        showView('slide-launch');
+        runLaunchSequence();
+      } else {
+        showView(`slide-${activeSlide}`);
+      }
+
+      document.getElementById('prevBtn').disabled = (activeSlide === 0);
+      document.getElementById('nextBtn').style.display = (activeSlide === 5) ? 'none' : 'flex';
+
+      const labels = ['תדריך פתיחה', 'חלק 1: האוצר', 'חלק 2: המסלול', 'חלק 3: חוקי המשחק', 'חלק 4: המספרים', 'הזנקה!'];
+      document.getElementById('slideStatus').innerText = labels[activeSlide] || '';
+
+      renderDots();
+      playRadarBeep();
+
+      if (isAutoPlaying) {
+        scheduleNextAutoSlide();
+      }
+    }
+
+    function nextSlide() {
+      if (activeSlide < totalBriefingSlides) {
+        goToSlide(activeSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      stopAutoPlay();
+      if (activeSlide > 0) {
+        goToSlide(activeSlide - 1);
+      }
+    }
+
+    function startMissionManual() {
+      initAudioOnFirstClick();
+      stopAutoPlay();
+      nextSlide();
+    }
+
+    /* Auto Play Sequence */
+    function startAutoPlay() {
+      initAudioOnFirstClick();
+      isAutoPlaying = true;
+      document.getElementById('autoPlayControl').classList.remove('hidden');
+      
+      if (activeSlide === 0) {
+        goToSlide(1);
+      } else {
+        scheduleNextAutoSlide();
+      }
+    }
+
+    function stopAutoPlay() {
+      isAutoPlaying = false;
+      if (autoPlayTimer) clearTimeout(autoPlayTimer);
+      document.getElementById('autoPlayControl').classList.add('hidden');
+      resetProgressBar();
+    }
+
+    function resetProgressBar() {
+      const bar = document.getElementById('autoProgressBar');
+      if (bar) {
+        bar.classList.remove('animate-progress');
+        bar.style.width = '0%';
+      }
+    }
+
+    function triggerProgressBar(durationMs) {
+      const bar = document.getElementById('autoProgressBar');
+      if (!bar) return;
+      bar.classList.remove('animate-progress');
+      void bar.offsetWidth; // Force reflow
+      bar.style.animationDuration = `${durationMs}ms`;
+      bar.classList.add('animate-progress');
+    }
+
+    function scheduleNextAutoSlide() {
+      if (!isAutoPlaying) return;
+
+      if (activeSlide >= 5) {
+        stopAutoPlay();
+        return;
+      }
+
+      const duration = slideDurations[activeSlide] || 5000;
+      triggerProgressBar(duration);
+
+      if (autoPlayTimer) clearTimeout(autoPlayTimer);
+      autoPlayTimer = setTimeout(() => {
+        if (isAutoPlaying) {
+          nextSlide();
+        }
+      }, duration);
+    }
+
+    /* High-Energy Launch Sequence */
+    function runLaunchSequence() {
+      const cdBox = document.getElementById('countdownBox');
+      const cdNum = document.getElementById('cdNum');
+      const finalState = document.getElementById('launchFinalState');
+
+      cdBox.classList.remove('hidden');
+      finalState.classList.add('hidden');
+      
+      let count = 3;
+      cdNum.innerText = count;
+      playCdBeep();
+
+      if (countdownTimer) clearInterval(countdownTimer);
+
+      countdownTimer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          cdNum.innerText = count;
+          cdNum.classList.remove('cd-pop');
+          void cdNum.offsetWidth;
+          cdNum.classList.add('cd-pop');
+          playCdBeep();
+        } else {
+          clearInterval(countdownTimer);
+          cdBox.classList.add('hidden');
+          finalState.classList.remove('hidden');
+          finalState.classList.add('flex');
+          
+          playLaunchFanfare();
+
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 150,
+              spread: 100,
+              origin: { y: 0.6 }
+            });
+          }
+        }
+      }, 1000);
+    }
+
+    /* Mode Switcher */
+    function toggleMode() {
+      initAudioOnFirstClick();
+      stopAutoPlay();
+      isFinalMode = !isFinalMode;
+      
+      const modeText = document.getElementById('modeText');
+      const modeIcon = document.getElementById('modeIcon');
+
+      if (isFinalMode) {
+        modeText.innerText = 'חזרה לתדריך פתיחה';
+        modeIcon.innerText = '🧭';
+        showView('slide-final-mode');
+        document.getElementById('slideStatus').innerText = 'מסך סיום - פתיחת האוצר';
+      } else {
+        modeText.innerText = 'מעבר למסך סיום (אוצר)';
+        modeIcon.innerText = '👑';
+        goToSlide(0);
+      }
+    }
+
+    /* Final Treasure Unlock */
+    const codeInputs = document.querySelectorAll('.code-in');
+    codeInputs.forEach((input, i) => {
+      input.addEventListener('input', (e) => {
+        if (e.target.value.length === 1 && i < codeInputs.length - 1) {
+          codeInputs[i + 1].focus();
+        }
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && i > 0) {
+          codeInputs[i - 1].focus();
+        }
+      });
+    });
+
+    function unlockTreasure() {
+      initAudioOnFirstClick();
+      let code = '';
+      codeInputs.forEach(input => code += input.value);
+      const status = document.getElementById('unlockStatus');
+
+      if (code.length < 4) {
+        status.className = 'text-xs font-bold text-amber-400';
+        status.innerText = 'יש להזין 4 ספרות!';
+        return;
+      }
+
+      status.className = 'text-sm font-bold text-emerald-400 animate-pulse';
+      status.innerText = '🎉 הקוד נכון! תיבת האוצר נפתחה בהצלחה!';
+      
+      document.getElementById('chestGraphic').innerText = '👑';
+      playLaunchFanfare();
+
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 200,
+          spread: 120,
+          origin: { y: 0.5 }
+        });
+      }
+    }
+
+    /* First Click Audio Initializer */
+    document.addEventListener('click', function() {
+      initAudioOnFirstClick();
+    }, { once: true });
+
+    /* Initialize Default View */
+    renderDots();
+  </script>
+</body>
+</html>
