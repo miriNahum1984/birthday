@@ -83,7 +83,6 @@
       box-shadow: 0 10px 25px rgba(231, 76, 60, 0.65);
     }
 
-    /* Radar Grid */
     .radar-grid {
       background-size: 32px 32px;
       background-image: 
@@ -148,7 +147,6 @@
 
 <body class="flex flex-col items-center justify-between p-3 md:p-6 min-h-screen relative radar-grid selection:bg-amber-500 selection:text-slate-950">
 
-  <!-- HEADER BAR -->
   <header class="w-full max-w-4xl flex items-center justify-between py-3 px-4 glass-box rounded-2xl mb-4 z-20">
     <div class="flex items-center space-x-3 space-x-reverse">
       <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-2xl shadow-inner">
@@ -174,7 +172,6 @@
     </div>
   </header>
 
-  <!-- MAIN STAGE -->
   <main class="w-full max-w-4xl flex-1 flex flex-col justify-center relative my-auto z-10">
     
     <div class="glass-box rounded-3xl p-5 md:p-10 relative overflow-hidden min-h-[480px] flex flex-col justify-center items-center text-center">
@@ -700,6 +697,12 @@
       if (code.length < 4) {
         status.className = 'text-xs font-bold text-amber-400';
         status.innerText = 'יש להזין 4 ספרות!';
+        return;
+      }
+
+      if (code !== '0510') {
+        status.className = 'text-xs md:text-sm font-bold text-red-400 animate-bounce';
+        status.innerText = '❌ קוד שגוי! בודקים שוב את הרמזים שבתחנות...';
         return;
       }
 
